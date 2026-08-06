@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block title %}Assistant Detail - AGENT Dashboard{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="/frontend/css/assistant-detail.css">
+{% endblock %}
+
+{% block header_content %}
+<div class="header-title">
+    <a href="/assistants" class="back-link">← Assistentlar</a>
+    <span class="header-divider">/</span>
+    <span id="assistant-name">Assistentning ma'lumotlari</span>
+</div>
+<div class="header-actions">
+    <button class="btn-primary" id="reload-btn">Yangilash</button>
+</div>
+{% endblock %}
+
+{% block content %}
+<div id="output"></div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/frontend/js/module.js"></script>
+<script src="/frontend/js/assistant-detail.js"></script>
+{% endblock %}

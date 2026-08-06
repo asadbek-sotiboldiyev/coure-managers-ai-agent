@@ -1,0 +1,6 @@
+fastapi[standard]
+python-dotenv
+psycopg2-binary
+pyrogram
+tgcrypto
+langchain-google-genai

@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block title %}Sozlamalar - AGENT Dashboard{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="/frontend/css/settings.css">
+{% endblock %}
+
+{% block header_title %}Sozlamalar{% endblock %}
+
+{% block header_actions %}
+<button class="btn-primary" id="reload-btn">Yangilash</button>
+{% endblock %}
+
+{% block content %}
+
+<div class="settings-section">
+    <div class="settings-section-header">
+        <h2>Assistentlarni boshqarish</h2>
+        <p class="settings-section-desc">
+            O'chirilgan assistentlar "Assistentlar" ro'yxatida va pipeline natijalarida
+            ko'rinmaydi. Xohlagan vaqtda qayta faollashtirishingiz mumkin.
+        </p>
+    </div>
+
+    <div class="search-container">
+        <input type="text" name="search" id="search-input" placeholder="Izlash..." onkeyup="filterAssistants(this.value)">
+    </div>
+
+    <div id="output"></div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="/frontend/js/settings.js"></script>
+{% endblock %}

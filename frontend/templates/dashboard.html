@@ -1,0 +1,406 @@
+{% extends "base.html" %}
+
+{% block title %}Course Manager Dashboard{% endblock %}
+
+{% block extra_css %}
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+    /* Dashboard faqat shu konteyner ichida ishlaydi, sidebar/header'ga tegmaydi */
+    #dashboard-root { font-family: "Inter", system-ui, -apple-system, sans-serif; }
+    #dashboard-root .fade-in { animation: dashFadeIn .25s ease-out; }
+    @keyframes dashFadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+    #dashboard-root .modal-overlay { animation: dashOverlayIn .18s ease-out; }
+    @keyframes dashOverlayIn { from { opacity: 0; } to { opacity: 1; } }
+    #dashboard-root .modal-panel { animation: dashPanelIn .22s cubic-bezier(.16,1,.3,1); }
+    @keyframes dashPanelIn { from { opacity: 0; transform: scale(.96) translateY(8px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+    #dashboard-root .progress-fill { transition: width .6s ease; }
+    #dashboard-root ::-webkit-scrollbar { width: 8px; height: 8px; }
+    #dashboard-root ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
+</style>
+{% endblock %}
+
+{% block header_content %}
+<div class="header-title">Course Manager Dashboard</div>
+<div class="header-actions">
+    <button class="btn-primary" id="reload-btn"><i class="fa-solid fa-rotate mr-2"></i>Yangilash</button>
+</div>
+{% endblock %}
+
+{% block content %}
+<div id="dashboard-root" class="bg-slate-50 min-h-full">
+
+    <!-- TOP INFO STRIP -->
+    <div class="px-6 pt-6">
+        <div class="flex flex-wrap items-center justify-between gap-3 bg-white border border-slate-200 rounded-2xl px-5 py-3 shadow-sm">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center">
+                    <i class="fa-solid fa-graduation-cap"></i>
+                </div>
+                <div>
+                    <h2 class="text-sm font-semibold text-slate-800">Data Analytics Course — Monitoring System</h2>
+                    <p class="text-xs text-slate-500">Assistentlar faoliyatini AI orqali kuzatish</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-4 text-xs text-slate-500">
+                <span class="flex items-center gap-1.5">
+                    <span id="status-dot" class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                    <span id="status-text">Tizim faol</span>
+                </span>
+                <span id="today-date" class="font-mono"></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- SUMMARY STAT CARDS -->
+    <div id="stat-cards" class="px-6 pt-5 grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4">
+        <!-- JS orqali to'ldiriladi -->
+    </div>
+
+    <!-- FILTERS -->
+    <div class="px-6 pt-6 flex flex-wrap items-center gap-2" id="filter-bar">
+        <button data-filter="all" class="filter-btn active-filter px-4 py-2 rounded-lg text-sm font-semibold border transition">
+            <i class="fa-solid fa-layer-group mr-1.5"></i>Barchasi
+        </button>
+        <button data-filter="green" class="filter-btn px-4 py-2 rounded-lg text-sm font-semibold border transition">
+            <span class="inline-block w-2 h-2 rounded-full bg-emerald-500 mr-1.5"></span>A'lo
+        </button>
+        <button data-filter="yellow" class="filter-btn px-4 py-2 rounded-lg text-sm font-semibold border transition">
+            <span class="inline-block w-2 h-2 rounded-full bg-amber-500 mr-1.5"></span>E'tibor kerak
+        </button>
+        <button data-filter="red" class="filter-btn px-4 py-2 rounded-lg text-sm font-semibold border transition">
+            <span class="inline-block w-2 h-2 rounded-full bg-rose-500 mr-1.5"></span>Kritik
+        </button>
+        <div class="ml-auto text-xs text-slate-400" id="results-count"></div>
+    </div>
+
+    <!-- ASSISTANTS GRID -->
+    <div id="assistants-grid" class="px-6 py-6 grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-5">
+        <!-- JS orqali to'ldiriladi -->
+    </div>
+
+    <!-- EMPTY / LOADING / ERROR STATE -->
+    <div id="state-banner" class="px-6 pb-10 hidden"></div>
+</div>
+
+<!-- DETAILS MODAL -->
+<div id="details-modal" class="fixed inset-0 z-[200] hidden items-center justify-center p-4">
+    <div class="modal-overlay absolute inset-0 bg-slate-900/60 backdrop-blur-sm" id="modal-overlay"></div>
+    <div class="modal-panel relative bg-white w-full max-w-3xl max-h-[85vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden">
+        <div class="flex items-start justify-between gap-4 px-6 py-5 border-b border-slate-100">
+            <div>
+                <h3 id="modal-assistant-name" class="text-lg font-bold text-slate-800">Assistant</h3>
+                <p id="modal-assistant-sub" class="text-xs text-slate-500 mt-0.5"></p>
+            </div>
+            <button id="modal-close-btn" class="w-9 h-9 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-700 flex items-center justify-center transition">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+        </div>
+        <div id="modal-body" class="overflow-y-auto px-6 py-5 flex flex-col gap-4"></div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+    const $ = (sel, ctx) => (ctx || document).querySelector(sel);
+    const $$ = (sel, ctx) => Array.from((ctx || document).querySelectorAll(sel));
+
+    const statCardsEl = $('#stat-cards');
+    const gridEl = $('#assistants-grid');
+    const filterBar = $('#filter-bar');
+    const resultsCountEl = $('#results-count');
+    const stateBanner = $('#state-banner');
+    const reloadBtn = $('#reload-btn');
+    const todayDateEl = $('#today-date');
+
+    const modal = $('#details-modal');
+    const modalOverlay = $('#modal-overlay');
+    const modalCloseBtn = $('#modal-close-btn');
+    const modalBody = $('#modal-body');
+    const modalName = $('#modal-assistant-name');
+    const modalSub = $('#modal-assistant-sub');
+
+    let leadersData = [];
+    let activeFilter = 'all';
+
+    // ---------- Sana ----------
+    todayDateEl.textContent = new Date().toLocaleDateString('uz-UZ', {
+        year: 'numeric', month: 'long', day: 'numeric'
+    });
+
+    // ---------- Rang-kodlash logikasi ----------
+    function getStatus(coveragePct, avgQualityScore) {
+        if (coveragePct > 80 && avgQualityScore > 7) return 'green';
+        if (coveragePct < 50 || avgQualityScore < 5) return 'red';
+        return 'yellow';
+    }
+
+    const STATUS_THEME = {
+        green:  { border: 'border-emerald-300', ring: 'ring-emerald-100', badgeBg: 'bg-emerald-50', badgeText: 'text-emerald-700', badgeBorder: 'border-emerald-200', bar: 'bg-emerald-500', dot: 'bg-emerald-500', label: "A'lo" },
+        yellow: { border: 'border-amber-300',   ring: 'ring-amber-100',   badgeBg: 'bg-amber-50',   badgeText: 'text-amber-700',   badgeBorder: 'border-amber-200',   bar: 'bg-amber-500',   dot: 'bg-amber-500',   label: "E'tibor kerak" },
+        red:    { border: 'border-rose-300',    ring: 'ring-rose-100',    badgeBg: 'bg-rose-50',    badgeText: 'text-rose-700',    badgeBorder: 'border-rose-200',    bar: 'bg-rose-500',    dot: 'bg-rose-500',    label: 'Kritik' },
+    };
+
+    // ---------- Ma'lumotlarni backend API'dan olish ----------
+    async function fetchDashboardData() {
+        const res = await fetch('/api/dashboard/overview');
+        if (!res.ok) throw new Error('Server xatosi: ' + res.status);
+        const json = await res.json();
+        if (json.status !== 'success') throw new Error(json.message || "Ma'lumot olishda xato");
+        return json;
+    }
+
+    function renderStatCards(summary) {
+        const cards = [
+            { icon: 'fa-users', label: 'Jami assistentlar', value: summary.total_assistants, accent: 'text-indigo-600', bg: 'bg-indigo-50' },
+            { icon: 'fa-people-group', label: 'Faol guruhlar', value: summary.active_groups, accent: 'text-blue-600', bg: 'bg-blue-50' },
+            { icon: 'fa-triangle-exclamation', label: 'Belgilangan talabalar', value: summary.total_flagged_students, accent: 'text-rose-600', bg: 'bg-rose-50' },
+            { icon: 'fa-star', label: "O'rtacha sifat balli", value: (summary.avg_quality_score ?? 0) + ' / 10', accent: 'text-amber-600', bg: 'bg-amber-50' },
+            { icon: 'fa-chart-line', label: 'Umumiy qamrov', value: (summary.overall_coverage_rate ?? 0) + '%', accent: 'text-emerald-600', bg: 'bg-emerald-50' },
+        ];
+
+        statCardsEl.innerHTML = cards.map(c => `
+            <div class="fade-in bg-white border border-slate-200 rounded-2xl p-4 shadow-sm flex items-center gap-3">
+                <div class="w-11 h-11 rounded-xl ${c.bg} ${c.accent} flex items-center justify-center text-lg shrink-0">
+                    <i class="fa-solid ${c.icon}"></i>
+                </div>
+                <div class="min-w-0">
+                    <p class="text-xs text-slate-500 truncate">${c.label}</p>
+                    <p class="text-xl font-bold text-slate-800">${c.value}</p>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function assistantCardHTML(a) {
+        const status = getStatus(a.coverage_pct, a.avg_quality_score);
+        const theme = STATUS_THEME[status];
+        const groupNames = (a.groups || []).map(g => g.group_name).join(', ') || "Guruh biriktirilmagan";
+
+        return `
+        <div class="fade-in assistant-card bg-white rounded-2xl border-2 ${theme.border} ring-4 ${theme.ring} shadow-sm p-5 flex flex-col gap-4" data-status="${status}" data-assistant-id="${a.assistant_id}">
+            <div class="flex items-start justify-between gap-3">
+                <div class="flex items-center gap-3 min-w-0">
+                    <div class="w-11 h-11 rounded-full bg-slate-800 text-white flex items-center justify-center font-bold shrink-0">
+                        ${(a.full_name || '?').trim().charAt(0).toUpperCase()}
+                    </div>
+                    <div class="min-w-0">
+                        <h3 class="font-bold text-slate-800 truncate">${a.full_name || "Noma'lum"}</h3>
+                        <p class="text-xs text-slate-500 truncate" title="${groupNames}"><i class="fa-solid fa-people-group mr-1"></i>${groupNames}</p>
+                    </div>
+                </div>
+                <span class="shrink-0 text-xs font-semibold px-2.5 py-1 rounded-full border ${theme.badgeBg} ${theme.badgeText} ${theme.badgeBorder} flex items-center gap-1.5">
+                    <span class="w-1.5 h-1.5 rounded-full ${theme.dot}"></span>${theme.label}
+                </span>
+            </div>
+
+            <div class="grid grid-cols-3 gap-2 text-center">
+                <div class="bg-slate-50 rounded-xl py-2">
+                    <p class="text-[11px] text-slate-400">Qamrov</p>
+                    <p class="font-bold text-slate-800 text-sm">${a.coverage_pct ?? 0}%</p>
+                </div>
+                <div class="bg-slate-50 rounded-xl py-2">
+                    <p class="text-[11px] text-slate-400">AI Ball</p>
+                    <p class="font-bold text-slate-800 text-sm">${a.avg_quality_score ?? 0}/10</p>
+                </div>
+                <div class="bg-slate-50 rounded-xl py-2">
+                    <p class="text-[11px] text-slate-400">Belgilangan</p>
+                    <p class="font-bold text-slate-800 text-sm">${a.flagged_students_count ?? 0}</p>
+                </div>
+            </div>
+
+            <div>
+                <div class="flex justify-between text-[11px] text-slate-400 mb-1">
+                    <span>Qamrov darajasi</span>
+                    <span>${a.coverage_pct ?? 0}%</span>
+                </div>
+                <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                    <div class="progress-fill h-full ${theme.bar} rounded-full" style="width:${Math.min(100, Math.max(0, a.coverage_pct || 0))}%"></div>
+                </div>
+            </div>
+
+            <div class="bg-slate-50 rounded-xl p-3 flex-1">
+                <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wide mb-1"><i class="fa-solid fa-robot mr-1"></i>AI Xulosa</p>
+                <p class="text-xs text-slate-600 leading-relaxed line-clamp-4">${a.leader_summary ? escapeHtml(a.leader_summary) : "Hozircha AI xulosa mavjud emas."}</p>
+            </div>
+
+            <button class="view-details-btn w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-900 text-white text-sm font-semibold transition flex items-center justify-center gap-2" data-assistant-id="${a.assistant_id}">
+                <i class="fa-solid fa-eye"></i> Batafsil ko'rish
+            </button>
+        </div>`;
+    }
+
+    function escapeHtml(str) {
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    }
+
+    function renderGrid() {
+        let filtered = leadersData;
+        if (activeFilter !== 'all') {
+            filtered = leadersData.filter(a => getStatus(a.coverage_pct, a.avg_quality_score) === activeFilter);
+        }
+
+        resultsCountEl.textContent = `${filtered.length} / ${leadersData.length} assistent`;
+
+        if (leadersData.length === 0) {
+            gridEl.innerHTML = '';
+            showBanner('info', "Hozircha assistentlar bo'yicha ma'lumot topilmadi.");
+            return;
+        }
+        if (filtered.length === 0) {
+            gridEl.innerHTML = '';
+            showBanner('info', "Ushbu filtr bo'yicha assistent topilmadi.");
+            return;
+        }
+        hideBanner();
+        gridEl.innerHTML = filtered.map(assistantCardHTML).join('');
+    }
+
+    function showBanner(type, message) {
+        const theme = type === 'error'
+            ? { bg: 'bg-rose-50', border: 'border-rose-200', text: 'text-rose-700', icon: 'fa-circle-exclamation' }
+            : { bg: 'bg-slate-100', border: 'border-slate-200', text: 'text-slate-500', icon: 'fa-circle-info' };
+        stateBanner.className = `px-6 pb-10 block`;
+        stateBanner.innerHTML = `
+            <div class="fade-in ${theme.bg} border ${theme.border} ${theme.text} rounded-xl p-4 text-sm flex items-center gap-2">
+                <i class="fa-solid ${theme.icon}"></i> ${message}
+            </div>`;
+    }
+    function hideBanner() { stateBanner.className = 'hidden'; }
+
+    function showLoading() {
+        gridEl.innerHTML = Array.from({ length: 3 }).map(() => `
+            <div class="bg-white border border-slate-200 rounded-2xl p-5 animate-pulse h-64"></div>
+        `).join('');
+        statCardsEl.innerHTML = Array.from({ length: 5 }).map(() => `
+            <div class="bg-white border border-slate-200 rounded-2xl p-4 h-[68px] animate-pulse"></div>
+        `).join('');
+        hideBanner();
+    }
+
+    // ---------- Modal ----------
+    function contactBadge(value, trueLabel, falseLabel) {
+        return value
+            ? `<span class="text-[11px] font-semibold px-2 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200"><i class="fa-solid fa-check mr-1"></i>${trueLabel}</span>`
+            : `<span class="text-[11px] font-semibold px-2 py-1 rounded-full bg-rose-50 text-rose-700 border border-rose-200"><i class="fa-solid fa-xmark mr-1"></i>${falseLabel}</span>`;
+    }
+
+    function studentRowHTML(s) {
+        const studentName = s.student_full_name || "Noma'lum talaba";
+        const groupName = s.group_name || "Noma'lum guruh";
+        return `
+        <div class="fade-in border border-slate-200 rounded-xl p-4 flex flex-col gap-3">
+            <div class="flex items-center justify-between gap-2 flex-wrap">
+                <span class="text-sm font-semibold text-slate-700 flex items-center gap-1.5">
+                    <i class="fa-solid fa-user text-slate-400"></i>${escapeHtml(studentName)}
+                    <span class="text-xs font-normal text-slate-400">• ${escapeHtml(groupName)}</span>
+                </span>
+                <div class="flex items-center gap-2 flex-wrap">
+                    ${contactBadge(s.contacted, "Bog'lanilgan", "Bog'lanilmagan")}
+                    ${contactBadge(s.help_offered, 'Yordam taklif etilgan', "Yordam yo'q")}
+                </div>
+            </div>
+            <div>
+                <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wide mb-1">Aniqlangan muammo</p>
+                <p class="text-sm text-slate-700">${s.problem ? escapeHtml(s.problem) : '—'}</p>
+            </div>
+            <div>
+                <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wide mb-1"><i class="fa-solid fa-robot mr-1"></i>AI Chat Tahlili</p>
+                <p class="text-sm text-slate-600">${s.ai_summary ? escapeHtml(s.ai_summary) : '—'}</p>
+            </div>
+            ${s.recommendations ? `
+            <div class="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                <p class="text-[11px] font-semibold text-amber-700 uppercase tracking-wide mb-1"><i class="fa-solid fa-lightbulb mr-1"></i>Tavsiya</p>
+                <p class="text-sm text-amber-800">${escapeHtml(s.recommendations)}</p>
+            </div>` : ''}
+            <div class="flex items-center justify-between text-xs text-slate-400 pt-1 border-t border-slate-100">
+                <span><i class="fa-solid fa-star mr-1"></i>AI Ball: ${s.support_quality_score ?? 0}/10</span>
+                <span><i class="fa-solid fa-calendar-days mr-1"></i>Oxirgi murojaat: ${s.last_contacted_date || "Noma'lum"}</span>
+            </div>
+        </div>`;
+    }
+
+    function openModal(assistantId) {
+        const a = leadersData.find(x => String(x.assistant_id) === String(assistantId));
+        if (!a) return;
+
+        modalName.textContent = a.full_name || 'Assistant';
+        modalSub.textContent = `${a.groups_count ?? (a.groups || []).length} ta guruh • ${a.flagged_students_count ?? 0} ta belgilangan talaba`;
+
+        const students = a.students || [];
+        modalBody.innerHTML = students.length
+            ? students.map(studentRowHTML).join('')
+            : `<p class="text-sm text-slate-400 text-center py-10">Belgilangan talabalar topilmadi.</p>`;
+
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeModal() {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        document.body.style.overflow = '';
+    }
+
+    modalOverlay.addEventListener('click', closeModal);
+    modalCloseBtn.addEventListener('click', closeModal);
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
+
+    gridEl.addEventListener('click', (e) => {
+        const btn = e.target.closest('.view-details-btn');
+        if (btn) openModal(btn.dataset.assistantId);
+    });
+
+    filterBar.addEventListener('click', (e) => {
+        const btn = e.target.closest('.filter-btn');
+        if (!btn) return;
+        activeFilter = btn.dataset.filter;
+        $$('.filter-btn').forEach(b => b.classList.remove('active-filter'));
+        btn.classList.add('active-filter');
+        renderGrid();
+    });
+
+    function applyFilterButtonStyles() {
+        $$('.filter-btn').forEach(b => {
+            b.classList.add('bg-white', 'border-slate-200', 'text-slate-500');
+        });
+    }
+
+    // ---------- Asosiy yuklash oqimi ----------
+    async function loadDashboard() {
+        showLoading();
+        try {
+            const data = await fetchDashboardData();
+            leadersData = data.assistants || [];
+            renderStatCards(data.summary || {});
+            renderGrid();
+            $('#status-dot').className = 'w-2 h-2 rounded-full bg-emerald-500';
+            $('#status-text').textContent = 'Tizim faol';
+        } catch (err) {
+            console.error(err);
+            statCardsEl.innerHTML = '';
+            gridEl.innerHTML = '';
+            showBanner('error', "Ma'lumotlarni yuklashda xato yuz berdi: " + err.message);
+            $('#status-dot').className = 'w-2 h-2 rounded-full bg-rose-500';
+            $('#status-text').textContent = 'Xato';
+        }
+    }
+
+    reloadBtn.addEventListener('click', loadDashboard);
+
+    applyFilterButtonStyles();
+    loadDashboard();
+})();
+</script>
+<style>
+    /* Faol filter tugmasi uslubi (Tailwind CDN'da dinamik class'lar uchun) */
+    #dashboard-root .filter-btn { background: #fff; border-color: #e2e8f0; color: #64748b; }
+    #dashboard-root .filter-btn.active-filter { background: #1e293b; border-color: #1e293b; color: #fff; }
+    .line-clamp-4 { display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+</style>
+{% endblock %}

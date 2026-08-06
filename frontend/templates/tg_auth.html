@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block title %}Connect telegram{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="/frontend/css/tg_auth.css">
+{% endblock %}
+
+{% block header_title %}Telegram akkaunt ulash{% endblock %}
+
+{% block header_actions %}
+{% endblock %}
+
+{% block content %}
+    <div class="form-container">
+        <!-- Step Indicator -->
+        <div class="step-indicator">
+            <div class="step active" id="step-1">1</div>
+            <div class="step" id="step-2">2</div>
+            <div class="step" id="step-3">3</div>
+            <div class="step" id="step-4">4</div>
+        </div>
+
+        <!-- Alerts -->
+        <div class="alert alert-success" id="alert-success"></div>
+        <div class="alert alert-error" id="alert-error"></div>
+        <div class="alert alert-warning" id="alert-warning"></div>
+
+        <!-- Step 1: Select Assistant and Enter Phone -->
+        <div id="step-1-content" class="form-section">
+            <h2 class="section-title">Assistentni Tanlang va Telefon Raqamini Kiriting</h2>
+
+            <div class="form-group">
+                <label for="assistant-select">Assistent *</label>
+                <input 
+                    type="text" 
+                    id="assistant-search" 
+                    placeholder="Assistent qidirish..."
+                >
+                <div class="assistant-list" id="assistant-list"></div>
+                <input 
+                    type="hidden" 
+                    id="selected-assistant-id"
+                >
+                <input 
+                    type="text" 
+                    id="selected-assistant-name" 
+                    placeholder="Tanlangan assistent..." 
+                    disabled
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="phone-input">Telefon Raqami (Xalqaro Format) *</label>
+                <input 
+                    type="tel" 
+                    id="phone-input" 
+                    placeholder="+998901234567"
+                    value="+998"
+                >
+            </div>
+
+            <div class="button-group">
+                <button class="btn btn-primary" id="btn-send-code">
+                    Kod Yuborish
+                </button>
+            </div>
+        </div>
+
+        <!-- Step 2: Enter Code -->
+        <div id="step-2-content" class="form-section hidden">
+            <h2 class="section-title">Kodni Tasdiqlang</h2>
+            <p style="margin-bottom: 1.5rem; color: var(--text-muted);">
+                Telegram akkauntiga yuborilgan 5 raqamli kodni kiriting.
+            </p>
+
+            <div class="form-group">
+                <label for="code-input">Kod *</label>
+                <input 
+                    type="text" 
+                    id="code-input" 
+                    placeholder="12345"
+                    maxlength="5"
+                    inputmode="numeric"
+                >
+            </div>
+
+            <div class="button-group">
+                <button class="btn btn-secondary" id="btn-back-from-code">Orqaga</button>
+                <button class="btn btn-primary" id="btn-verify-code">Kodni Tasdiqlang</button>
+            </div>
+        </div>
+
+        <!-- Step 3: Enter 2FA Password (if needed) -->
+        <div id="step-3-content" class="form-section hidden">
+            <h2 class="section-title">2FA Parolini Kiriting</h2>
+            <p style="margin-bottom: 1.5rem; color: var(--text-muted);">
+                Telegram akkauntingiz ikkita faktorli autentifikatsiya bilan himoyalangan.
+            </p>
+
+            <div class="form-group">
+                <label for="password-input">2FA Paroli *</label>
+                <input 
+                    type="password" 
+                    id="password-input" 
+                    placeholder="Parolni kiriting"
+                >
+            </div>
+
+            <div class="button-group">
+                <button class="btn btn-secondary" id="btn-back-from-password">Orqaga</button>
+                <button class="btn btn-primary" id="btn-verify-password">Parolni Tasdiqlang</button>
+            </div>
+        </div>
+
+        <!-- Step 4: Success -->
+        <div id="step-4-content" class="form-section hidden">
+            <h2 class="section-title">Muvaffaqiyat!</h2>
+            <p style="margin-bottom: 1.5rem; color: var(--text-muted);">
+                Telegram autentifikatsiyasi muvaffaqiyatli yakunlandi.
+            </p>
+
+            <div id="success-info" style="
+                background-color: var(--success-bg);
+                border: 1px solid var(--success-border);
+                border-radius: 8px;
+                padding: 1rem;
+                margin-bottom: 1.5rem;
+                color: var(--success-text);
+            "></div>
+
+            <div class="button-group">
+                <button class="btn btn-primary" id="btn-new-auth">Yangi Autentifikatsiya</button>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/frontend/js/tg_auth.js"></script>
+{% endblock %}

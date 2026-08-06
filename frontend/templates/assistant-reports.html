@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block title %}Hisobotlar - AGENT Dashboard{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="/frontend/css/assistant-reports.css">
+{% endblock %}
+
+{% block header_title %} Assistentning Hisobotlari {% endblock %}
+
+{% block header_actions %}
+    <select id="assistant-select" class="btn-select">
+        <option value="">Assistentni tanlang...</option>
+    </select>
+    <button class="btn-primary" id="reload-btn">Yangilash</button>
+{% endblock %}
+
+{% block content %}
+    <div id="output"></div>
+{% endblock %}
+
+{% block scripts %}
+    <script src="/frontend/js/assistant-reports.js"></script>
+{% endblock %}

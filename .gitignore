@@ -1,0 +1,10 @@
+.env
+*.sqlite3
+*.json
+sessions/*.session
+sessions/*.session-journal
+logs/*.log
+__pycache__/
+*.pyc
+.venv/
+venv/

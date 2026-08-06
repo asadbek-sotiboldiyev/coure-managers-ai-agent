@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}AGENT Dashboard{% endblock %}
+
+{% block header_title %}Monitoring Boshqaruvi{% endblock %}
+
+
+
+{% block content %}
+<!-- CONTROL PANEL -->
+<div class="control-panel">
+	<div class="control-section">
+		<label for="assistant-search">Assistentni tanlang:</label>
+		<input 
+			type="text" 
+			id="assistant-search" 
+			class="assistant-search"
+			placeholder="Assistent qidirish..."
+		>
+		<div class="assistant-list" id="assistant-list"></div>
+		<input 
+			type="hidden" 
+			id="selected-assistant-id"
+		>
+		<input 
+			type="text" 
+			id="selected-assistant-name" 
+			class="selected-assistant-display"
+			placeholder="Tanlangan assistent..." 
+			disabled
+		>
+	</div>
+
+	<div class="control-section">
+		<label>Guruhlarni tanlang:</label>
+		<div id="groups-container" class="groups-container">
+			<p style="color: var(--text-muted); font-size: 14px;">Avval assistentni tanlang</p>
+		</div>
+		<div class="groups-actions">
+			<button id="select-all-btn" class="btn-secondary" style="display: none;">Hammasini tanlash</button>
+			<button id="deselect-all-btn" class="btn-secondary" style="display: none;">Hammasini bekor qilish</button>
+		</div>
+	</div>
+
+	<div class="control-section">
+		<button id="start-analysis-btn" class="btn-primary" disabled>Tahlilni boshlash</button>
+	</div>
+</div>
+
+<!-- OUTPUT SECTION -->
+<div id="output">
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/frontend/js/module.js"></script>
+<script src="/frontend/js/script.js"></script>
+{% endblock %}

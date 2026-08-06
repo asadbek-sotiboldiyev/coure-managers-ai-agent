@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}AGENT Dashboard{% endblock %}</title>
+    <link rel="stylesheet" href="/frontend/css/style.css">
+    {% block extra_css %}{% endblock %}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    {% block inline_styles %}{% endblock %}
+</head>
+<body>
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        <div class="sidebar-top">
+            <div class="sidebar-brand">
+                <h1>AGENT</h1>
+                <span class="badge-v">v1.0.0</span>
+            </div>
+            <ul class="sidebar-nav">
+                <li class="nav-item {% if active_page == 'home' %}active{% endif %}"><a href="/">Dashboard</a></li>
+                <li class="nav-item {% if active_page == 'group-check' %}active{% endif %}"><a href="/group-check">Tekshirish</a></li>
+                <li class="nav-item {% if active_page == 'assistants' %}active{% endif %}"><a href="/assistants">Assistentlar</a></li>
+                <li class="nav-item {% if active_page == 'assistant-reports' %}active{% endif %}"><a href="/assistant-reports">Hisobotlar</a></li>
+                <li class="nav-item {% if active_page == 'connect-tg' %}active{% endif %}"><a href="/connect-tg">Telegram hisob</a></li>
+                <li class="nav-item {% if active_page == 'dashboard' %}active{% endif %}"><a href="/dashboard">Course Dashboard</a></li>
+                <li class="nav-item {% if active_page == 'settings' %}active{% endif %}"><a href="/settings">Sozlamalar</a></li>
+            </ul>
+        </div>
+        <div class="sidebar-footer">
+            <div class="user-avatar">A</div>
+            <div class="user-info">
+                <h4>Admin</h4>
+                <p>System Manager</p>
+            </div>
+        </div>
+    </aside>
+
+    <!-- APP WRAPPER (HEADER + MAIN) -->
+    <div class="app-wrapper">
+        
+        <!-- HEADER -->
+        <header class="header">
+            {% block header_content %}
+            <div class="header-title">{% block header_title %}{% endblock %}</div>
+            <div class="header-actions">
+                {% block header_actions %}{% endblock %}
+            </div>
+            {% endblock %}
+        </header>
+        
+        <!-- MAIN CONTAINER -->
+        <div id="main-view">
+            {% block content %}{% endblock %}
+        </div>
+        
+    </div>
+
+    {% block scripts %}{% endblock %}
+</body>
+</html>

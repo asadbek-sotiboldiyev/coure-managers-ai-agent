@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block title %}Assistents - AGENT Dashboard{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="/frontend/css/assistants.css">
+<style>
+    .search-container input[type=text] {
+        padding: 6px;
+        border: none;
+        margin-top: 8px;
+        margin-right: 16px;
+        font-size: 17px;
+        border: 1px solid #aaa;
+        border-radius: 5px;
+        width: calc(100% - 120px); /* Adjust width to accommodate the button */
+    }
+</style>
+{% endblock %}
+
+{% block header_title %}Assistentlar Ro'yxati{% endblock %}
+
+{% block header_actions %}
+<button class="btn-primary" id="reload-btn">Yangilash</button>
+{% endblock %}
+
+{% block content %}
+
+<div class="search-container">
+    <input type="text" name="search" id="search-input" placeholder="Izlash..." onkeyup="filterAssistants(this.value)">
+    
+    <button class="btn-clear btn-primary" onclick="clearInput()">Tozalash</button>
+</div>
+
+<div id="output">
+</div>
+
+
+{% endblock %}
+
+{% block scripts %}
+<script src="/frontend/js/assistants.js"></script>
+{% endblock %}
