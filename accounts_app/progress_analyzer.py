@@ -1,83 +1,70 @@
 """
-accounts_app: guruh progress snapshot'larini LangChain + Gemini orqali
-tahlil qilib, muammoli studentlarni (StudentProblem) ajratib beradi.
+accounts_app: guruh progress snapshot'larini tahlil qilib, muammoli
+studentlarni (StudentProblem) ajratib beradi.
 
-Bu bosqich pipeline'ning birinchi AI-chaqiruvi: chat tarixi hali o'qilmagan,
+Bu bosqich pipeline'ning birinchi tekshiruvi: chat tarixi hali o'qilmagan,
 faqat DB'dagi lesson/homework raqamlari asosida "kim orqada qolgan"ligini
-aniqlaydi. Natija (muammoli studentlar) keyingi bosqichga (chat_history_app)
-yo'naltiriladi.
+aniqlaydi. Qoida oddiy: hozirgi darsgacha (current_lesson_number) necha
+ta homework berilishi kerak bo'lsa, shundan kamida 2 tasi yuklanmagan
+bo'lsa -- student muammoli deb topiladi. Natija (muammoli studentlar)
+keyingi bosqichga (chat_history_app) yo'naltiriladi.
 """
 import asyncio
-import json
-from dataclasses import asdict
 
-from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain_core.messages import SystemMessage, HumanMessage
-
-from shared.config import ai_config
 from shared.models import GroupProgressSnapshot, StudentProblem
 from shared.logger import get_logger
-from accounts_app.progress_prompts import PROGRESS_SYSTEM_PROMPT, build_progress_user_prompt
-from accounts_app.progress_schema import GroupProgressAnalysis
 
 logger = get_logger(__name__)
 
-_llm = ChatGoogleGenerativeAI(
-    model=ai_config.model,
-    google_api_key=ai_config.google_api_key,
-    temperature=ai_config.temperature,
-    max_output_tokens=ai_config.max_tokens,
-)
-
-# Gemini javobini majburiy ravishda GroupProgressAnalysis strukturasiga moslaydi
-_structured_llm = _llm.with_structured_output(GroupProgressAnalysis)
+# Hozirgi darsgacha kamida shuncha homework yuklanmagan bo'lsa muammo deb topiladi
+_MIN_MISSING_HOMEWORKS_FOR_PROBLEM = 2
 
 
 async def analyze_group_progress(snapshot: GroupProgressSnapshot) -> list[StudentProblem]:
     """
-    Bitta guruhning progress snapshot'ini AI'ga yuborib, har bir student uchun
-    StudentProblem qaytaradi. AI chaqiruvi xato bo'lsa, shu guruh uchun bo'sh
-    ro'yxat qaytariladi (pipeline to'xtamasligi uchun -- fault isolation).
+    Bitta guruhning progress snapshot'ini qoida asosida tahlil qilib, har bir
+    student uchun StudentProblem qaytaradi. AI ishlatilmaydi -- hozirgi
+    darsgacha kerak bo'lgan homeworklar sonidan kamida
+    `_MIN_MISSING_HOMEWORKS_FOR_PROBLEM` tasi kam yuklangan bo'lsa muammoli
+    deb topiladi.
     """
     await asyncio.sleep(0)
-    
+
     if not snapshot.students:
         return []
 
-    # DIQQAT: group_name (va boshqa har qanday nom) AI'ga QASDDAN yuborilmaydi --
-    # faqat group_id (anonim identifikator) va studentlarning progress raqamlari ketadi.
-    payload = {
-        "group_id": snapshot.group_id,
-        "students": [asdict(s) for s in snapshot.students],
-    }
-    group_json = json.dumps(payload, ensure_ascii=False)
-
-    print("--- [stream] accounts_app/progress_analyzer: Progress tahlili uchun AI chaqiruvi ---")
-    print(payload)
-
-    messages = [
-        SystemMessage(content=PROGRESS_SYSTEM_PROMPT),
-        HumanMessage(content=build_progress_user_prompt(group_json)),
-    ]
-
-    try:
-        result: GroupProgressAnalysis = await _structured_llm.ainvoke(messages)
-        problems = [
-            StudentProblem(
-                student_id=r.student_id,
-                group_id=snapshot.group_id,
-                problem=r.problem.strip() if r.has_problem and r.problem.strip() else None,
-            )
-            for r in result.results
-        ]
-        found = sum(1 for p in problems if p.problem)
-        logger.info(
-            f"group={snapshot.group_id}: {found}/{len(problems)} ta studentda progress muammosi topildi."
+    current_lesson_number = (
+        snapshot.progress_info.current_lesson_number if snapshot.progress_info else None
+    )
+    if not current_lesson_number:
+        logger.warning(
+            f"group={snapshot.group_id}: current_lesson_number aniqlanmadi, "
+            "progress tekshiruvi o'tkazib yuborildi (bo'sh ro'yxat)."
         )
-        return problems
-    except Exception as e:
-        logger.error(f"Progress tahlilida xato: group={snapshot.group_id}: {e}")
         return []
+
+    problems: list[StudentProblem] = []
+    for s in snapshot.students:
+        missing_count = current_lesson_number - (s.uploaded_homeworks_count or 0)
+        has_problem = missing_count >= _MIN_MISSING_HOMEWORKS_FOR_PROBLEM
+        problems.append(
+            StudentProblem(
+                student_id=s.student_id,
+                group_id=snapshot.group_id,
+                problem=(
+                    f"Hozirgi darsgacha ({current_lesson_number}) {missing_count} ta "
+                    "uy vazifasi yuklanmagan."
+                    if has_problem
+                    else None
+                ),
+            )
+        )
+
+    found = sum(1 for p in problems if p.problem)
+    logger.info(
+        f"group={snapshot.group_id}: {found}/{len(problems)} ta studentda progress muammosi topildi."
+    )
+    return problems
 
 
 async def analyze_group_progress_batch(

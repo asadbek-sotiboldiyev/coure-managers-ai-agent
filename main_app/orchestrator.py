@@ -234,6 +234,13 @@ async def run_continue_stream(
     # Muammoli studentlarni so'rovdan kelgan assistant_id bilan bog'laymiz.
     targets = resolve_targets_for_problems_with_assistant(problematic, assistant_id)
 
+    def get_student_fullname(student_id: int) -> str:
+        for t in targets:
+            if t.student.student_id == student_id:
+                return t.student.full_name
+        return str(student_id)
+
+    # print("TARGETS:", targets)
     yield {
         "state": "accounts",
         "data": {
@@ -281,6 +288,7 @@ async def run_continue_stream(
                         "stage": "chat_history_checking",
                         "assistant_id": assistant.assistant_id,
                         "student_id": target.student.student_id,
+                        "student_name": target.student.full_name,
                         "message": "Chat tarixini olishda xato yuz berdi, o'tkazib yuborildi.",
                     },
                 }
@@ -296,6 +304,7 @@ async def run_continue_stream(
                     "data": {
                         "student": {
                             "student_id": history.student_id,
+                            "student_name": target.student.full_name,
                             "assistant_id": history.assistant_id,
                             "problem": history.problem,
                             "message_count": 0,
@@ -311,6 +320,7 @@ async def run_continue_stream(
                 "data": {
                     "student": {
                         "student_id": history.student_id,
+                        "student_name": target.student.full_name,
                         "assistant_id": history.assistant_id,
                         "problem": history.problem,
                         "message_count": len(history.messages),

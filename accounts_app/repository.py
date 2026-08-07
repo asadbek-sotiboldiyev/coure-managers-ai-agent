@@ -62,6 +62,12 @@ WITH homeworks_for_module AS (
     SELECT id, title
     FROM homework_lesson
     WHERE module_id = %(module_id)s
+    AND "order" <= (
+    	select hl."order"  from group_progress gp 
+		left join homework_lesson hl 
+		on gp.current_lesson_id = hl.id 
+		where gp.group_id = %(group_id)s	
+    	) 
 ),
 students_with_name AS (
     SELECT

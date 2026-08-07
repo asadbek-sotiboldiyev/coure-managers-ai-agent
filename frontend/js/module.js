@@ -63,7 +63,6 @@ function makeAccountsHTML(data) {
         <li class="students-li">
             <div class="left">
                 <h3>${escapeHtml(st.full_name)} <span style="color: var(--text-muted); font-weight: 400;">(ID: ${escapeHtml(st.student_id)})</span></h3>
-                <h4>Guruh #${escapeHtml(st.group_id)} • Assistent: ${escapeHtml(st.assistant?.full_name || '')} (ID: ${escapeHtml(st.assistant?.assistant_id ?? '')})</h4>
             </div>
             <div class="right">
                 <h3>${escapeHtml(st.problem)}</h3>
@@ -137,12 +136,12 @@ function makePreviewHTML(previewResult) {
     return `
     <div id="preview-section" class="preview-section">
         <div class="accounts-header">
-            <h2>Tekshirilgan studentlar ro'yxati (jami ${problematicCount} ta muammoli topildi)</h2>
+            <h2>Tekshirilgan o'quvchilar ro'yxati (jami ${problematicCount} ta muammoli topildi)</h2>
         </div>
         ${groupsHtml}
         <div class="preview-actions">
             <button id="continue-analysis-btn" class="btn-primary" ${problematicCount === 0 ? 'disabled' : ''}>
-                ${problematicCount === 0 ? "Muammoli student yo'q" : `Davom etish (${problematicCount} ta student uchun AI tahlili)`}
+                ${problematicCount === 0 ? "Muammoli o'quvchi yo'q" : `Davom etish (${problematicCount} ta student uchun AI tahlili)`}
             </button>
         </div>
     </div>
@@ -176,7 +175,7 @@ function makeChatCheckingHTML(data) {
         return `
         <div class="status-check-card">
             <span class="dot" style="background: var(--text-muted);"></span>
-            <span>O'tkazib yuborildi <b>(Student ID: ${escapeHtml(student.student_id)}, Assistent ID: ${escapeHtml(student.assistant_id)})</b> -- yangi xabar topilmadi.</span>
+            <span>O'tkazib yuborildi <b>(${student.student_name})</b> -- yangi xabar topilmadi.</span>
         </div>
         `;
     }
@@ -184,7 +183,7 @@ function makeChatCheckingHTML(data) {
     return `
         <div class="status-check-card checking-loader">
             <span class="dot"></span>
-            <span>Chat tarixi tekshirilmoqda... <b>(Student ID: ${escapeHtml(student.student_id)}, Assistent ID: ${escapeHtml(student.assistant_id)})</b> -- ${escapeHtml(student.message_count ?? 0)} ta xabar</span>
+            <span>Chat tarixi tekshirilmoqda... <b>(${student.student_name})</b> -- ${escapeHtml(student.message_count ?? 0)} ta xabar</span>
         </div>
     `;
 }
@@ -201,7 +200,7 @@ function makeSummaryHTML(data) {
     return `
         <div class="summary-card">
             <div class="summary-header">
-                <span class="summary-title">Tahlil hisoboti (Student #${escapeHtml(data.student_id)} • Assistent #${escapeHtml(data.assistant_id)})</span>
+                <span class="summary-title">Tahlil hisoboti (${student.student_name})</span>
                 <span class="score-badge">Qo'llab-quvvatlash balli: ${escapeHtml(score)}/10</span>
             </div>
             <div class="summary-body">
@@ -240,15 +239,13 @@ function makeErrorHTML(data) {
 
     const details = [];
     if (data.group_ids) details.push(`Guruhlar: ${[].concat(data.group_ids).join(', ')}`);
-    if (data.assistant_id !== undefined) details.push(`Assistent ID: ${escapeHtml(data.assistant_id)}`);
-    if (data.student_id !== undefined) details.push(`Student ID: ${escapeHtml(data.student_id)}`);
+    if (data.student_id !== undefined) details.push(`${data.student_name}`);
 
     return `
         <div class="status-check-card error-card">
             <span class="dot" style="background: var(--danger-text);"></span>
             <span>
-                <b>⚠️ Xatolik (${escapeHtml(stageLabel)})</b>: ${escapeHtml(data.message || 'Noma\'lum xatolik')}
-                ${details.length ? `<br><span style="font-size: 0.75rem;">${details.map(escapeHtml).join(' • ')}</span>` : ''}
+                <b>⚠️ Xatolik (${escapeHtml(stageLabel)}) ${details.join(' • ')}</b>: ${escapeHtml(data.message || 'Noma\'lum xatolik')}
             </span>
         </div>
     `;
@@ -273,6 +270,8 @@ function makeDoneHTML(data) {
 function makeElement(response) {
     const state = response.state;
     const data = response.data || {};
+    console.log("MakeElement: ", data);
+    
 
     switch (state) {
         case "accounts":
