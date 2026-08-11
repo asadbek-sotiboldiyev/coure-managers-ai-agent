@@ -405,9 +405,15 @@ async def get_dashboard_overview():
         logger.error(f"Dashboard uchun assistentlarni olishda xato: {e}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
+    # /settings sahifasidan o'chirilgan (inactive) deb belgilangan assistentlarni
+    # natijadan chiqarib tashlaymiz.
+    inactive_ids = set(get_inactive_assistant_ids())
+
     assistants_map: dict[int, dict] = {}
     for row in rows:
         aid = row.assistant_id
+        if aid in inactive_ids:
+            continue
         if aid not in assistants_map:
             assistants_map[aid] = {
                 "assistant_id": aid,
@@ -421,6 +427,8 @@ async def get_dashboard_overview():
                 "group_name": row.group_name,
                 "is_active": row.group_is_active,
             })
+
+
 
     # 2) SQLite'dan barcha AI reportlar (barcha assistentlar uchun).
     # Dashboard metrikalari (coverage, avg score) so'nggi 7 kunlik "rolling

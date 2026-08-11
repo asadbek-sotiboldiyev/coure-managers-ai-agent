@@ -79,7 +79,7 @@ students_with_name AS (
     LEFT JOIN "user" u
         ON s.user_id = u.id
     WHERE s.group_id = %(group_id)s
-      AND s.status = 'active'
+      AND s.status IN ('active', 'unpaid')
 ),
 module_uploads AS (
     SELECT
@@ -141,7 +141,7 @@ SELECT
     CONCAT_WS(' ', u.first_name, u.last_name)             AS full_name
 FROM student s
 JOIN "user" u ON s.user_id = u.id
-WHERE s.status = 'active' AND s.group_id = %s
+WHERE s.status IN ('active', 'unpaid') AND s.group_id = %s
 ORDER BY s.id;
 """
 
