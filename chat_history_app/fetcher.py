@@ -79,8 +79,9 @@ async def _resolve_chat_id_for_student(client: Client, student: StudentInfo) -> 
             combined_text = f"{chat_title} {chat_first} {chat_last}".strip()
 
             if target_code:
-                code_words = re.findall(r"\S+", combined_text)
-                if target_code in code_words:
+                code_words = re.findall(r"(?<![A-Za-z0-9])\d+", combined_text, flags=re.IGNORECASE)
+                code_words = [word.lower() for word in code_words]
+                if target_code in code_words or target_code.lstrip("0") in code_words:
                     return chat.id
 
             if fallback_chat_id is None:

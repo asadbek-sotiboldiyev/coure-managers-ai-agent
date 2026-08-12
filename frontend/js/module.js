@@ -197,6 +197,7 @@ function makeSummaryHTML(data) {
     const addressed = !!data.addressed_issues;
     const discussed = !!data.discussed_flagged_problem;
 
+    const student = STUDENTS[data.student_id] || { student_name: 'Noma\'lum' };
     return `
         <div class="summary-card">
             <div class="summary-header">

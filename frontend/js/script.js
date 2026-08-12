@@ -11,6 +11,8 @@ const deselectAllBtn = document.getElementById('deselect-all-btn');
 let selectedGroups = [];
 let assistantsData = [];
 let filteredAssistants = [];
+let STUDENTS = {}
+
 
 const workingLabel = `<div id="current-state">
       <div class="loader-wrapper">
@@ -201,6 +203,11 @@ async function startPreview() {
         const result = await response.json();
         console.log(result);
         currentPreviewId = result.preview_id;
+        result.groups.forEach(group => {
+            group.students.forEach(student => {
+                STUDENTS[student.student_id] = student;
+            });
+        })
 
         outputDiv.innerHTML = makePreviewHTML(result);
 
