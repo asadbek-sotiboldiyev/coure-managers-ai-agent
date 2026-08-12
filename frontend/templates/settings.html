@@ -6,10 +6,40 @@
 
 {% block header_title %}Sozlamalar{% endblock %}
 
+{% block inline_styles %}
+    <style>
+        .settings-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin: 10px;
+            margin-bottom: 20px;
+        }
+        .settings-link{
+            display: block;
+            padding: 15px;
+            color: #333;
+            font-size: 18px;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            text-decoration: none;
+            transition: 0.2s ease;
+        }
+        .settings-link:hover {
+            border-color: #00f;
+            color: #00f;
+        }
+    </style>
+{% endblock %}
+
 {% block content %}
 
+
 <div class="settings-section">
-    <a href="/settings/inactive-assistant">Assistentlarni o'chirish</a>
+    <div class="settings-list">
+        <a class="settings-link" href="/settings/inactive-assistant">Assistentlarni o'chirish</a>
+    </div>
 </div>
 
 {% endblock %}
