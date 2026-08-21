@@ -206,20 +206,32 @@ async def get_assistants():
     """
     query = """
     SELECT
-        u.id            AS assistant_id,
+        u.id AS assistant_id,
         u.full_name AS full_name,
-        split_part(u.full_name, ' ', 1) as first_name,
-        split_part(u.full_name, ' ', 2) as last_name,
-        u.phone_number,
+        split_part(u.full_name, ' ', 1) AS first_name,
+        split_part(u.full_name, ' ', 2) AS last_name,
+        u.phone AS phone_number,
         u.username,
-        u.is_active     AS user_is_active,
-        g.id            AS group_id,
-        g.name          AS group_name,
-        g.status        AS group_status,
-        g.is_active     AS group_is_active
+        u.is_active AS user_is_active,
+
+        g.id AS group_id,
+        g.name AS group_name,
+        g.status AS group_status,
+        g.is_active AS group_is_active
+
     FROM app_user u
-    LEFT JOIN study_group g ON g.assistant_id = u.id
-    WHERE u.role = 'mentor_assistant' and g.status = 'active'
+
+    JOIN user_roles ur
+        ON ur.app_user_id = u.id
+
+    JOIN rbac_role r
+        ON r.id = ur.role_id
+        AND r.name = 'mentor_assistant'
+
+    LEFT JOIN study_group g
+        ON g.assistant_id = u.id
+        AND g.status = 'active'
+
     ORDER BY u.id, g.id;
     """
     try:
@@ -385,15 +397,27 @@ async def get_dashboard_overview():
     # 1) PostgreSQL'dan assistentlar + guruhlar
     query = """
     SELECT
-        u.id            AS assistant_id,
+        u.id AS assistant_id,
         u.full_name AS full_name,
-        u.is_active     AS user_is_active,
-        g.id            AS group_id,
-        g.name          AS group_name,
-        g.is_active     AS group_is_active
+        u.is_active AS user_is_active,
+
+        g.id AS group_id,
+        g.name AS group_name,
+        g.is_active AS group_is_active
+
     FROM app_user u
-    LEFT JOIN study_group g ON g.assistant_id = u.id
-    WHERE u.role = 'mentor_assistant' and g.status = 'active'
+
+    JOIN user_roles ur
+        ON ur.app_user_id = u.id
+
+    JOIN rbac_role r
+        ON r.id = ur.role_id
+        AND r.name = 'mentor_assistant'
+
+    JOIN study_group g
+        ON g.assistant_id = u.id
+        AND g.status = 'active'
+
     ORDER BY u.id, g.id;
     """
     try:
@@ -806,13 +830,18 @@ async def get_settings_assistants():
     """
     query = """
     SELECT
-        u.id            AS assistant_id,
+        u.id AS assistant_id,
         u.full_name AS full_name,
-        u.phone_number,
+        u.phone AS phone_number,
         u.username,
-        u.is_active     AS user_is_active
+        u.is_active AS user_is_active
     FROM app_user u
-    WHERE u.role = 'mentor_assistant' and u.is_active = TRUE
+    JOIN user_roles ur
+        ON ur.app_user_id = u.id
+    JOIN rbac_role r
+        ON r.id = ur.role_id
+    WHERE r.name = 'mentor_assistant'
+    AND u.is_active = TRUE
     ORDER BY u.id;
     """
     try:

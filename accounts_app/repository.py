@@ -286,17 +286,26 @@ def fetch_group_progress_batches(
 
 _QUERY_ASSISTANT_AND_STUDENT_FOR_TARGET = """
 SELECT
-    g.assistant_id                                        AS assistant_id,
-    a_usr.full_name     AS assistant_name,
-    s.id                                                  AS student_id,
-    s_usr.full_name     AS student_name,
-    COALESCE(split_part(s_usr.full_name, ' ', 1), '')                       AS student_first_name,
-    COALESCE(split_part(s_usr.full_name, ' ', 2), '')                        AS student_last_name,
-    s_usr.user_id_number                                  AS student_user_id_number
+    g.assistant_id AS assistant_id,
+    a_usr.full_name AS assistant_name,
+    s.id AS student_id,
+    s_usr.full_name AS student_name,
+    COALESCE(split_part(s_usr.full_name, ' ', 1), '') AS student_first_name,
+    COALESCE(split_part(s_usr.full_name, ' ', 2), '') AS student_last_name,
+    s_usr.user_id_number AS student_user_id_number
 FROM study_group g
-JOIN app_user a_usr ON g.assistant_id = a_usr.id AND a_usr.role = 'mentor_assistant'
-JOIN student s ON s.group_id = g.id AND s.id = %s
-JOIN app_user s_usr ON s.user_id = s_usr.id
+JOIN app_user a_usr
+    ON g.assistant_id = a_usr.id
+JOIN user_roles ur
+    ON ur.app_user_id = a_usr.id
+JOIN rbac_role rr
+    ON rr.id = ur.role_id
+    AND rr.name = 'mentor_assistant'
+JOIN student s
+    ON s.group_id = g.id
+    AND s.id = %s
+JOIN app_user s_usr
+    ON s.user_id = s_usr.id
 WHERE g.id = %s;
 """
 

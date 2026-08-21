@@ -44,7 +44,12 @@ class VerifyPasswordRequest(BaseModel):
 def _check_assistant_exists(assistant_id: int) -> bool:
     with get_connection() as conn:
         cursor = conn.cursor()
-        cursor.execute("""SELECT full_name FROM app_user WHERE id = %s AND role = 'mentor_assistant'""", (assistant_id,))
+        cursor.execute("""SELECT au.full_name
+                        FROM app_user au
+                        JOIN user_roles ur ON ur.app_user_id = au.id
+                        JOIN rbac_role rr ON rr.id = ur.role_id
+                        WHERE au.id = %s
+                        AND rr.name = 'mentor_assistant';""", (assistant_id,))
         return cursor.fetchone() is not None
 
 async def _finish_successful_login(assistant_id: int, phone_number: str, client: Client):
