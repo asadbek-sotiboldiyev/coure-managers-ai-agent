@@ -85,7 +85,7 @@ module_uploads AS (
     SELECT
         hu.student_id,
         hm.title,
-        hu.uploaded_at
+        hu.created_at as uploaded_at
     FROM homework_upload hu
     INNER JOIN homeworks_for_module hm
         ON hu.homework_id = hm.id
