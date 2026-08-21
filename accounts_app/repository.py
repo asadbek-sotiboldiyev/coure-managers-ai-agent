@@ -72,8 +72,8 @@ WITH homeworks_for_module AS (
 students_with_name AS (
     SELECT
         s.id AS id,
-        u.first_name,
-        u.last_name,
+        split_part(u.full_name, ' ', 1) as first_name,
+        split_part(u.full_name, ' ', 2) as last_name,
         s.group_id
     FROM student s
     LEFT JOIN app_user u
@@ -138,7 +138,7 @@ def fetch_group_ids_by_ids(group_ids: list[int]) -> list[tuple[int, str]]:
 _QUERY_GROUP_STUDENTS_DISPLAY_INFO = """
 SELECT
     s.id                                                  AS student_id,
-    CONCAT_WS(' ', u.first_name, u.last_name)             AS full_name
+    u.full_name             AS full_name
 FROM student s
 JOIN app_user u ON s.user_id = u.id
 WHERE s.status IN ('active', 'unpaid') AND s.group_id = %s
@@ -287,11 +287,11 @@ def fetch_group_progress_batches(
 _QUERY_ASSISTANT_AND_STUDENT_FOR_TARGET = """
 SELECT
     g.assistant_id                                        AS assistant_id,
-    CONCAT_WS(' ', a_usr.first_name, a_usr.last_name)     AS assistant_name,
+    a_usr.full_name     AS assistant_name,
     s.id                                                  AS student_id,
-    CONCAT_WS(' ', s_usr.first_name, s_usr.last_name)     AS student_name,
-    COALESCE(s_usr.first_name, '')                       AS student_first_name,
-    COALESCE(s_usr.last_name, '')                        AS student_last_name,
+    s_usr.full_name     AS student_name,
+    COALESCE(split_part(s_usr.full_name, ' ', 1), '')                       AS student_first_name,
+    COALESCE(split_part(s_usr.full_name, ' ', 2), '')                        AS student_last_name,
     s_usr.user_id_number                                  AS student_user_id_number
 FROM study_group g
 JOIN app_user a_usr ON g.assistant_id = a_usr.id AND a_usr.role = 'mentor_assistant'
@@ -305,7 +305,7 @@ WHERE g.id = %s;
 _QUERY_STUDENT_FOR_TARGET = """
 SELECT
     s.id                                                  AS student_id,
-    CONCAT_WS(' ', s_usr.first_name, s_usr.last_name)     AS student_name,
+    s_usr.full_name     AS student_name,
     COALESCE(s_usr.first_name, '')                       AS student_first_name,
     COALESCE(s_usr.last_name, '')                        AS student_last_name,
     s_usr.user_id_number                                  AS student_user_id_number
@@ -317,7 +317,7 @@ WHERE s.group_id = %s AND s.id = %s;
 _QUERY_ASSISTANT_NAME_BY_ID = """
 SELECT
     u.id                                       AS assistant_id,
-    CONCAT_WS(' ', u.first_name, u.last_name)  AS assistant_name
+    u.full_name  AS assistant_name
 FROM app_user u
 WHERE u.id = %s AND u.role = 'mentor_assistant';
 """

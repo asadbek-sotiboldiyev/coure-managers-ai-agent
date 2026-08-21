@@ -207,9 +207,9 @@ async def get_assistants():
     query = """
     SELECT
         u.id            AS assistant_id,
-        CONCAT_WS(' ', u.first_name, u.last_name) AS full_name,
-        u.first_name,
-        u.last_name,
+        u.full_name AS full_name,
+        split_part(u.full_name, ' ', 1) as first_name,
+        split_part(u.full_name, ' ', 2) as last_name,
         u.phone_number,
         u.username,
         u.is_active     AS user_is_active,
@@ -274,9 +274,9 @@ async def get_assistants():
 _QUERY_STUDENT_INFO_BY_IDS = """
 SELECT
     s.id                                                  AS student_id,
-    CONCAT_WS(' ', s_usr.first_name, s_usr.last_name)    AS student_full_name,
-    s_usr.first_name                                     AS student_first_name,
-    s_usr.last_name                                      AS student_last_name,
+    s_usr.full_name    AS student_full_name,
+    split_part(s_usr.full_name, ' ', 1)                                     AS student_first_name,
+    split_part(s_usr.full_name, ' ', 1)                                      AS student_last_name,
     s.group_id                                           AS group_id,
     g.name                                                AS group_name
 FROM student s
@@ -386,7 +386,7 @@ async def get_dashboard_overview():
     query = """
     SELECT
         u.id            AS assistant_id,
-        CONCAT_WS(' ', u.first_name, u.last_name) AS full_name,
+        u.full_name AS full_name,
         u.is_active     AS user_is_active,
         g.id            AS group_id,
         g.name          AS group_name,
@@ -636,7 +636,7 @@ async def get_recent_checks(limit: int = 20):
                         group_name_map[row.group_id] = row.group_name
                 if assistant_ids:
                     cursor.execute(
-                        'SELECT id AS assistant_id, CONCAT_WS(\' \', first_name, last_name) AS full_name '
+                        'SELECT id AS assistant_id, full_name AS full_name '
                         'FROM app_user WHERE id = ANY(%s);',
                         (assistant_ids,),
                     )
@@ -686,7 +686,7 @@ async def get_dashboard_groups():
         g.id            AS group_id,
         g.name          AS group_name,
         g.assistant_id  AS assistant_id,
-        CONCAT_WS(' ', u.first_name, u.last_name) AS assistant_full_name
+        u.full_name AS assistant_full_name
     FROM study_group g
     LEFT JOIN app_user u ON u.id = g.assistant_id
     WHERE g.status = 'active'
@@ -807,7 +807,7 @@ async def get_settings_assistants():
     query = """
     SELECT
         u.id            AS assistant_id,
-        CONCAT_WS(' ', u.first_name, u.last_name) AS full_name,
+        u.full_name AS full_name,
         u.phone_number,
         u.username,
         u.is_active     AS user_is_active

@@ -41,7 +41,7 @@ def _prompt_assistant_id() -> int:
         with get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute(
-                "SELECT CONCAT_WS(' ', first_name, last_name) AS name FROM app_user WHERE id = %s AND role = 'mentor_assistant'",
+                "SELECT full_name AS name FROM app_user WHERE id = %s AND role = 'mentor_assistant'",
                 (assistant_id,)
             )
             row = cursor.fetchone()
