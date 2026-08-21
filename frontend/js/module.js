@@ -17,6 +17,7 @@
 //   - "done"              -> {total_reports}
 // ==============================================================================
 
+let STUDENTS = {};  // {student_id: {student_name, ...}} -- chat_history_checking va summary bosqichlarida ishlatiladi
 // Kichik yordamchi: HTML-injection oldini olish uchun matnni escape qilish
 function escapeHtml(value) {
     if (value === null || value === undefined) return '';
@@ -201,7 +202,7 @@ function makeSummaryHTML(data) {
     return `
         <div class="summary-card">
             <div class="summary-header">
-                <span class="summary-title">Tahlil hisoboti (${student.student_name})</span>
+                <span class="summary-title">Tahlil hisoboti (${student.full_name})</span>
                 <span class="score-badge">Qo'llab-quvvatlash balli: ${escapeHtml(score)}/10</span>
             </div>
             <div class="summary-body">
@@ -275,8 +276,8 @@ function makeElement(response) {
     
 
     switch (state) {
-        case "accounts":
-            return makeAccountsHTML(data);
+        // case "accounts":
+        //     return makeAccountsHTML(data);
         case "accounts_batches":
             return makeAccountsBatchesHTML(data);
         case "chat_history_checking":

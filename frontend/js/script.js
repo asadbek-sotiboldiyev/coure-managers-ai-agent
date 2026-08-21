@@ -11,7 +11,6 @@ const deselectAllBtn = document.getElementById('deselect-all-btn');
 let selectedGroups = [];
 let assistantsData = [];
 let filteredAssistants = [];
-let STUDENTS = {}
 
 
 const workingLabel = `<div id="current-state">

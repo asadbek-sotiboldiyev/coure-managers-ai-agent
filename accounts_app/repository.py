@@ -26,13 +26,13 @@ logger = get_logger(__name__)
 
 _QUERY_ALL_GROUP_IDS_SORTED = """
 SELECT id AS group_id, name AS group_name
-FROM "group"
+FROM study_group
 ORDER BY id;
 """
 
 _QUERY_GROUP_IDS_BY_IDS_SORTED = """
 SELECT id AS group_id, name AS group_name
-FROM "group"
+FROM study_group
 WHERE id = ANY(%s)
 ORDER BY id;
 """
@@ -49,10 +49,10 @@ SELECT
   cl."name" tool,
   ml."name" module
 FROM group_progress gp
-LEFT JOIN "group" g ON g.id = gp.group_id
-LEFT JOIN homework_lesson hl ON hl.id = gp.current_lesson_id
-LEFT JOIN module_lesson ml ON ml.id = hl.module_id
-LEFT JOIN category_lesson cl ON cl.id = ml.category_id
+LEFT JOIN study_group g ON g.id = gp.group_id
+LEFT JOIN catalog_homework hl ON hl.id = gp.current_lesson_id
+LEFT JOIN catalog_module ml ON ml.id = hl.module_id
+LEFT JOIN catalog_category cl ON cl.id = ml.category_id
 WHERE gp.group_id = %s;
 """
 
@@ -60,11 +60,11 @@ WHERE gp.group_id = %s;
 _QUERY_GROUP_STUDENTS_PROGRESS = """
 WITH homeworks_for_module AS (
     SELECT id, title
-    FROM homework_lesson
+    FROM catalog_homework
     WHERE module_id = %(module_id)s
     AND "order" <= (
     	select hl."order"  from group_progress gp 
-		left join homework_lesson hl 
+		left join catalog_homework hl 
 		on gp.current_lesson_id = hl.id 
 		where gp.group_id = %(group_id)s	
     	) 
@@ -76,7 +76,7 @@ students_with_name AS (
         u.last_name,
         s.group_id
     FROM student s
-    LEFT JOIN "user" u
+    LEFT JOIN app_user u
         ON s.user_id = u.id
     WHERE s.group_id = %(group_id)s
       AND s.status IN ('active', 'unpaid')
@@ -140,7 +140,7 @@ SELECT
     s.id                                                  AS student_id,
     CONCAT_WS(' ', u.first_name, u.last_name)             AS full_name
 FROM student s
-JOIN "user" u ON s.user_id = u.id
+JOIN app_user u ON s.user_id = u.id
 WHERE s.status IN ('active', 'unpaid') AND s.group_id = %s
 ORDER BY s.id;
 """
@@ -293,10 +293,10 @@ SELECT
     COALESCE(s_usr.first_name, '')                       AS student_first_name,
     COALESCE(s_usr.last_name, '')                        AS student_last_name,
     s_usr.user_id_number                                  AS student_user_id_number
-FROM "group" g
-JOIN "user" a_usr ON g.assistant_id = a_usr.id AND a_usr.role = 'mentor_assistant'
+FROM study_group g
+JOIN app_user a_usr ON g.assistant_id = a_usr.id AND a_usr.role = 'mentor_assistant'
 JOIN student s ON s.group_id = g.id AND s.id = %s
-JOIN "user" s_usr ON s.user_id = s_usr.id
+JOIN app_user s_usr ON s.user_id = s_usr.id
 WHERE g.id = %s;
 """
 
@@ -310,7 +310,7 @@ SELECT
     COALESCE(s_usr.last_name, '')                        AS student_last_name,
     s_usr.user_id_number                                  AS student_user_id_number
 FROM student s
-JOIN "user" s_usr ON s.user_id = s_usr.id
+JOIN app_user s_usr ON s.user_id = s_usr.id
 WHERE s.group_id = %s AND s.id = %s;
 """
 
@@ -318,7 +318,7 @@ _QUERY_ASSISTANT_NAME_BY_ID = """
 SELECT
     u.id                                       AS assistant_id,
     CONCAT_WS(' ', u.first_name, u.last_name)  AS assistant_name
-FROM "user" u
+FROM app_user u
 WHERE u.id = %s AND u.role = 'mentor_assistant';
 """
 

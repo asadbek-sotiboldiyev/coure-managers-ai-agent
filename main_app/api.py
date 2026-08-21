@@ -217,8 +217,8 @@ async def get_assistants():
         g.name          AS group_name,
         g.status        AS group_status,
         g.is_active     AS group_is_active
-    FROM "user" u
-    LEFT JOIN "group" g ON g.assistant_id = u.id
+    FROM app_user u
+    LEFT JOIN study_group g ON g.assistant_id = u.id
     WHERE u.role = 'mentor_assistant' and g.status = 'active'
     ORDER BY u.id, g.id;
     """
@@ -280,8 +280,8 @@ SELECT
     s.group_id                                           AS group_id,
     g.name                                                AS group_name
 FROM student s
-JOIN "user" s_usr ON s.user_id = s_usr.id
-LEFT JOIN "group" g ON s.group_id = g.id
+JOIN app_user s_usr ON s.user_id = s_usr.id
+LEFT JOIN study_group g ON s.group_id = g.id
 WHERE s.id = ANY(%s);
 """
 
@@ -391,8 +391,8 @@ async def get_dashboard_overview():
         g.id            AS group_id,
         g.name          AS group_name,
         g.is_active     AS group_is_active
-    FROM "user" u
-    LEFT JOIN "group" g ON g.assistant_id = u.id
+    FROM app_user u
+    LEFT JOIN study_group g ON g.assistant_id = u.id
     WHERE u.role = 'mentor_assistant' and g.status = 'active'
     ORDER BY u.id, g.id;
     """
@@ -629,7 +629,7 @@ async def get_recent_checks(limit: int = 20):
                 cursor = conn.cursor()
                 if group_ids:
                     cursor.execute(
-                        'SELECT id AS group_id, name AS group_name FROM "group" WHERE id = ANY(%s);',
+                        'SELECT id AS group_id, name AS group_name FROM study_group WHERE id = ANY(%s);',
                         (group_ids,),
                     )
                     for row in cursor.fetchall():
@@ -637,7 +637,7 @@ async def get_recent_checks(limit: int = 20):
                 if assistant_ids:
                     cursor.execute(
                         'SELECT id AS assistant_id, CONCAT_WS(\' \', first_name, last_name) AS full_name '
-                        'FROM "user" WHERE id = ANY(%s);',
+                        'FROM app_user WHERE id = ANY(%s);',
                         (assistant_ids,),
                     )
                     for row in cursor.fetchall():
@@ -687,8 +687,8 @@ async def get_dashboard_groups():
         g.name          AS group_name,
         g.assistant_id  AS assistant_id,
         CONCAT_WS(' ', u.first_name, u.last_name) AS assistant_full_name
-    FROM "group" g
-    LEFT JOIN "user" u ON u.id = g.assistant_id
+    FROM study_group g
+    LEFT JOIN app_user u ON u.id = g.assistant_id
     WHERE g.status = 'active'
     ORDER BY g.id;
     """
@@ -811,7 +811,7 @@ async def get_settings_assistants():
         u.phone_number,
         u.username,
         u.is_active     AS user_is_active
-    FROM "user" u
+    FROM app_user u
     WHERE u.role = 'mentor_assistant' and u.is_active = TRUE
     ORDER BY u.id;
     """
