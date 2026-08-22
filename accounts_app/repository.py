@@ -325,10 +325,15 @@ WHERE s.group_id = %s AND s.id = %s;
 
 _QUERY_ASSISTANT_NAME_BY_ID = """
 SELECT
-    u.id                                       AS assistant_id,
-    u.full_name  AS assistant_name
+    u.id AS assistant_id,
+    u.full_name AS assistant_name
 FROM app_user u
-WHERE u.id = %s AND u.role = 'mentor';
+JOIN user_roles ur
+    ON ur.app_user_id = u.id
+JOIN rbac_role r
+    ON r.id = ur.role_id
+WHERE u.id = %s
+  AND r.name = 'mentor';
 """
 
 
