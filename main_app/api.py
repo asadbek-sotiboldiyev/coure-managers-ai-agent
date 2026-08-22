@@ -195,7 +195,7 @@ def fetch_assistant_tg_status_map() -> dict[int, dict]:
 @api_router.get("/assistants", tags=["Assistants"])
 async def get_assistants():
     """
-    PostgreSQL'dan barcha assistentlarni (role='mentor_assistant') ularning
+    PostgreSQL'dan barcha assistentlarni (role='mentor') ularning
     biriktirilgan guruhlari bilan birga qaytaradi.
 
     Har bir assistent uchun:

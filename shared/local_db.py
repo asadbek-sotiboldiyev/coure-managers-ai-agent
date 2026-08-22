@@ -97,7 +97,7 @@ def ensure_assistant_tg_info_table_exists() -> None:
     Mavjud bo'lmasa yaratadi (idempotent).
 
     Har bir assistant uchun Pyrogram session ma'lumotlarini saqlaydi:
-    - assistant_id: user (PostgreSQL) jadvalidagi id (role='mentor_assistant')
+    - assistant_id: user (PostgreSQL) jadvalidagi id (role='mentor')
     - session_name: Pyrogram session fayl nomi (masalan 'assistant_3')
     - phone: login qilingan telefon raqami
     - tg_user_id: Telegram foydalanuvchi ID'si (login vaqtida saqlanadi)

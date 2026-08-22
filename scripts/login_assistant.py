@@ -30,9 +30,9 @@ logger = get_logger(__name__)
 
 
 def _prompt_assistant_id() -> int:
-    """User (role='mentor_assistant') jadvalidagi mavjud assistant_id ni so'raydi va tekshiradi."""
+    """User (role='mentor') jadvalidagi mavjud assistant_id ni so'raydi va tekshiradi."""
     while True:
-        raw = input("Assistant_id (user.id where role='mentor_assistant') ni kiriting: ").strip()
+        raw = input("Assistant_id (user.id where role='mentor') ni kiriting: ").strip()
         if not raw.isdigit():
             print("Xato: assistant_id butun son bo'lishi kerak.")
             continue
