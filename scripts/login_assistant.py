@@ -41,13 +41,13 @@ def _prompt_assistant_id() -> int:
         with get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute(
-                "SELECT full_name AS name FROM app_user WHERE id = %s AND role = 'mentor_assistant'",
+                "SELECT full_name AS name FROM app_user WHERE id = %s AND role = 'mentor'",
                 (assistant_id,)
             )
             row = cursor.fetchone()
 
         if not row:
-            print(f"Xato: user jadvalida mentor_assistant assistant_id={assistant_id} topilmadi. Qayta urinib ko'ring.")
+            print(f"Xato: user jadvalida mentor assistant_id={assistant_id} topilmadi. Qayta urinib ko'ring.")
             continue
 
         print(f"Topildi: {row.name} (assistant_id={assistant_id})")

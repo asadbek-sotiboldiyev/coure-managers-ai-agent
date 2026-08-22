@@ -226,7 +226,7 @@ async def get_assistants():
 
     JOIN rbac_role r
         ON r.id = ur.role_id
-        AND r.name = 'mentor_assistant'
+        AND r.name = 'mentor'
 
     LEFT JOIN study_group g
         ON g.assistant_id = u.id
@@ -373,7 +373,7 @@ async def get_dashboard_overview():
     """
     Course Manager Dashboard uchun agregatsiya qilingan ma'lumotlar.
 
-    Har bir assistant (mentor_assistant) uchun:
+    Har bir assistant (mentor) uchun:
     - assistant_id, full_name, groups (nomlari)
     - coverage_pct: shu assistantga tegishli ai_reports orasida
       addressed_issues=true bo'lganlarning foizi (0-100)
@@ -412,7 +412,7 @@ async def get_dashboard_overview():
 
     JOIN rbac_role r
         ON r.id = ur.role_id
-        AND r.name = 'mentor_assistant'
+        AND r.name = 'mentor'
 
     JOIN study_group g
         ON g.assistant_id = u.id
@@ -840,7 +840,7 @@ async def get_settings_assistants():
         ON ur.app_user_id = u.id
     JOIN rbac_role r
         ON r.id = ur.role_id
-    WHERE r.name = 'mentor_assistant'
+    WHERE r.name = 'mentor'
     AND u.is_active = TRUE
     ORDER BY u.id;
     """

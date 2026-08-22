@@ -300,7 +300,7 @@ JOIN user_roles ur
     ON ur.app_user_id = a_usr.id
 JOIN rbac_role rr
     ON rr.id = ur.role_id
-    AND rr.name = 'mentor_assistant'
+    AND rr.name = 'mentor'
 JOIN student s
     ON s.group_id = g.id
     AND s.id = %s
@@ -328,7 +328,7 @@ SELECT
     u.id                                       AS assistant_id,
     u.full_name  AS assistant_name
 FROM app_user u
-WHERE u.id = %s AND u.role = 'mentor_assistant';
+WHERE u.id = %s AND u.role = 'mentor';
 """
 
 
@@ -419,7 +419,7 @@ def resolve_targets_for_problems_with_assistant(
         assistant_row = cursor.fetchone()
         if not assistant_row:
             logger.warning(
-                f"assistant={assistant_id}: 'mentor_assistant' roli bilan topilmadi, "
+                f"assistant={assistant_id}: 'mentor' roli bilan topilmadi, "
                 "hech qanday target yaratilmadi."
             )
             return targets
