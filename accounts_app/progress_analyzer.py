@@ -17,7 +17,7 @@ from shared.logger import get_logger
 logger = get_logger(__name__)
 
 # Hozirgi darsgacha kamida shuncha homework yuklanmagan bo'lsa muammo deb topiladi
-_MIN_MISSING_HOMEWORKS_FOR_PROBLEM = 2
+_MIN_MISSING_HOMEWORKS_FOR_PROBLEM = 3
 
 
 async def analyze_group_progress(snapshot: GroupProgressSnapshot) -> list[StudentProblem]:

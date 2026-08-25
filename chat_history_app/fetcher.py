@@ -81,6 +81,7 @@ async def _resolve_chat_id_for_student(client: Client, student: StudentInfo) -> 
             if target_code:
                 code_words = re.findall(r"(?<![A-Za-z0-9])\d+", combined_text, flags=re.IGNORECASE)
                 code_words = [word.lower() for word in code_words]
+                print(f"Checking chat {target_code}:", code_words)
                 if target_code in code_words or target_code.lstrip("0") in code_words:
                     return chat.id
 

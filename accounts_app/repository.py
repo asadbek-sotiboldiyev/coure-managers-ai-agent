@@ -315,8 +315,8 @@ _QUERY_STUDENT_FOR_TARGET = """
 SELECT
     s.id                                                  AS student_id,
     s_usr.full_name     AS student_name,
-    COALESCE(s_usr.first_name, '')                       AS student_first_name,
-    COALESCE(s_usr.last_name, '')                        AS student_last_name,
+    COALESCE(split_part(s_usr.full_name, ' ', 1), '')                       AS student_first_name,
+    COALESCE(split_part(s_usr.full_name, ' ', 2), '')                        AS student_last_name,
     s_usr.user_id_number                                  AS student_user_id_number
 FROM student s
 JOIN app_user s_usr ON s.user_id = s_usr.id
