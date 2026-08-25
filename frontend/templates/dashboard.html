@@ -187,7 +187,7 @@
                         ${(a.full_name || '?').trim().charAt(0).toUpperCase()}
                     </div>
                     <div class="min-w-0">
-                        <h3 class="font-bold text-slate-800 truncate">${a.full_name || "Noma'lum"}</h3>
+                        <h3 class="font-bold text-slate-800 truncate"><a href='/assistant/${a.assistant_id}'>${a.full_name || "Noma'lum"}</a></h3>
                         <p class="text-xs text-slate-500 truncate" title="${groupNames}"><i class="fa-solid fa-people-group mr-1"></i>${groupNames}</p>
                     </div>
                 </div>

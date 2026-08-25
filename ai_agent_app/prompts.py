@@ -23,9 +23,9 @@ Vazifangiz -- berilgan yozishma asosida quyidagilarni aniqlang:
 5. ENG MUHIMI: berilgan MUAMMO (progress bo'yicha oldindan aniqlangan) ushbu
    yozishmada assistant va talaba o'rtasida muhokama qilinganmi -- ya'ni assistant
    shu muammodan xabardor bo'lib, unga aloqador gaplashganmi.
+6. Assistant talaba bilan ohirgi 5 kun ichida bog'langanmi, agar bu suhbat 5 kundan eski bo'lsa, buni hisobot matnida qayd eting. Va scoreni pastlashiga sabab bo'ladi. 
 
 Javobingizni berilgan strukturaga qat'iy mos holda qaytaring."""
-
 
 def build_user_prompt(chat_text: str, problem: str | None = None) -> str:
     problem_block = (
