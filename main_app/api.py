@@ -9,7 +9,7 @@ import json
 from datetime import datetime, timedelta
 from typing import Dict, Any
 
-from fastapi import FastAPI, HTTPException, status, APIRouter
+from fastapi import FastAPI, HTTPException, Query, status, APIRouter
 from fastapi.responses import StreamingResponse
 from contextlib import asynccontextmanager
 
@@ -817,6 +817,88 @@ async def get_dashboard_groups():
 
     return {"status": "success", "count": len(groups_list), "groups": groups_list}
 
+# ==============================================================================
+# 📚 STUDENTS: students data olish
+# ==============================================================================
+
+@api_router.get("/students/stats", tags=["Students"])
+async def get_students_stat(group_ids: str):
+    """
+    Berilgan group_id bo'yicha barcha studentlarni qaytaradi.
+    Har bir student uchun:
+    - student_id, full_name, first_name, last_name, phone_number, username
+    - is_active (studentning user account holati)
+    """
+    query_students = """
+    SELECT
+        s.id AS student_id,
+        s.group_id
+    FROM student s
+    JOIN app_user u ON s.user_id = u.id
+    where s.status in ('active', 'unpaid') and  s.group_id = any(%s)
+    ORDER BY s.id;
+    """
+    group_ids_list = list(map(int, group_ids.split(',')))
+    try:
+        with get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(query_students, (group_ids_list,))
+            rows = cursor.fetchall()
+    except Exception as e:
+        logger.error(f"Group #{group_ids_list} uchun studentlarni olishda xato: {e}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+    students_list = [
+        {
+            "student_id": row.student_id,
+            "group_id": row.group_id
+        }
+        for row in rows
+    ]
+
+    group_ids_str = ",".join(str(gid) for gid in group_ids_list)
+    query_checked_students = f"""
+    select
+        gcl.group_id as group_id,
+        gcl.checked_at as checked_at,
+        sil.student_id as student_id,
+        max(sil.is_resolved) as is_resolved,
+        coalesce(max(json_extract(ar.raw_json, "$.support_quality_score")), 0) as score
+    from group_check_logs gcl 
+    left join student_issues_log sil 
+    on sil.check_id = gcl.check_id 
+    left join ai_reports ar 
+    on ar.student_id = sil.student_id 
+    WHERE checked_at >= datetime('now', '-7 days') and sil.student_id is not null and gcl.group_id in ({group_ids_str})
+    group by sil.student_id 
+    """
+    print(f"query_checked_students: {query_checked_students}")
+    students_checked = []
+    try:
+        with get_local_connection() as conn:
+            cursor = conn.execute(query_checked_students)
+            rows_checked = cursor.fetchall()
+            for row in rows_checked:
+                students_checked.append({
+                    "student_id": row["student_id"],
+                    "group_id": row["group_id"],
+                    "checked_at": row["checked_at"],
+                    "is_resolved": int(row["is_resolved"]),
+                    "score": int(row["score"])
+                })
+    except Exception as e:
+        logger.error(f"Group #{group_ids_list} uchun studentlarni tekshirish holatini olishda xato: {e}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+    return {
+        "status": "success",
+        "data": {
+            "group_ids": group_ids,
+            "count": len(students_list),
+            "students": students_list,
+            "students_checked": students_checked
+        }
+    }
 
 # ==============================================================================
 # ⚙️ SETTINGS: ASSISTANTLARNI FAOLSIZLASHTIRISH (INACTIVE) ENDPOINTLARI
@@ -891,6 +973,8 @@ async def enable_assistant(assistant_id: int):
         logger.error(f"Assistantni qayta faollashtirishda xato (assistant_id={assistant_id}): {e}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
     return {"status": "success", "assistant_id": assistant_id, "is_disabled": False}
+
+
 
 
 @api_router.get("/health", tags=["Health Check"])

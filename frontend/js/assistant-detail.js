@@ -6,6 +6,9 @@ const assistantNameSpan = document.getElementById('assistant-name');
 const pathParts = window.location.pathname.split('/');
 const assistantId = parseInt(pathParts[2], 10);
 
+let DATA_ASSISTANTS = null;
+let ALL_REPORTS = []; // Barcha reportlarni saqlash uchun
+
 if (!assistantId || isNaN(assistantId)) {
   outputDiv.innerHTML = getErrorHTML('Noto\'g\'ri assistentning ID raqami');
 }
@@ -34,6 +37,7 @@ async function fetchAssistantInfo(id) {
     const response = await fetch(`/api/assistants`);
     if (!response.ok) throw new Error('Assistentlar ma\'lumotlarini olishda xato');
     const data = await response.json();
+    DATA_ASSISTANTS = data.assistants;
     
     const assistant = data.assistants.find(a => a.assistant_id === id);
     if (!assistant) throw new Error('Assistentni topilmadi');
@@ -54,6 +58,20 @@ async function fetchAssistantReports(id) {
   } catch (error) {
     console.error('Reportlarni olishda xato:', error);
     return [];
+  }
+}
+
+// Get student statistics for specified group IDs
+async function fetchStudentStats(groupIds) {
+  if (!groupIds || groupIds.length === 0) return null;
+  try {
+    const response = await fetch(`/api/students/stats/?group_ids=${groupIds.join(',')}`);
+    if (!response.ok) throw new Error('Talabalar statistikasini olishda xato');
+    const res = await response.json();
+    return res.data;
+  } catch (error) {
+    console.error('Statistika olishda xato:', error);
+    return null;
   }
 }
 
@@ -95,8 +113,8 @@ function getAssistantInfoHTML(assistant) {
   `;
 }
 
-// Render groups section
-function getGroupsHTML(groups) {
+// Render groups section with statistics
+function getGroupsHTML(groups, statsData) {
   if (!groups || groups.length === 0) {
     return `
       <div class="groups-detail-section">
@@ -108,31 +126,85 @@ function getGroupsHTML(groups) {
     `;
   }
 
-  const groupCardsHTML = groups.map(group => `
-    <div class="group-card">
-      <div class="group-card-header">
-        <h4 class="group-card-title">${group.group_name}</h4>
-        <span class="group-card-status ${group.is_active ? 'active' : 'inactive'}">
-          ${group.is_active ? '✓ Faol' : '✗ Nofaol'}
-        </span>
-      </div>
-      
-      <div class="group-card-details">
-        <div class="group-detail-row">
-          <span class="group-detail-label">Guruh ID:</span>
-          <span class="group-detail-value">${group.group_id}</span>
+  const students = statsData?.students || [];
+  const checked = statsData?.students_checked || [];
+
+  // Overall Statistics across all groups
+  const totalStudents = students.length;
+  const totalChecked = checked.length;
+  const totalResolved = checked.filter(s => s.is_resolved === 1).length;
+  const totalHighScore = checked.filter(s => s.score >= 5).length;
+
+  const groupCardsHTML = groups.map(group => {
+    const gStudents = students.filter(s => s.group_id === group.group_id);
+    const gChecked = checked.filter(s => s.group_id === group.group_id);
+    
+    const countStudents = gStudents.length;
+    const countChecked = gChecked.length;
+    const countResolved = gChecked.filter(s => s.is_resolved === 1).length;
+    const countHighScore = gChecked.filter(s => s.score >= 5).length;
+    const countLowScore = gChecked.filter(s => s.score < 5).length;
+
+    const isChecked = gChecked.length > 0;
+
+    const detailsHTML = `
+    <div class="group-detail-row">
+            <span class="group-detail-label">Talabalar soni:</span>
+            <span class="group-detail-value">${countStudents}</span>
+          </div><hr>
+          <div class="group-detail-row">
+            <span class="group-detail-label">Tekshirilganlar:</span>
+            <span class="group-detail-value">${countChecked}</span>
+          </div><hr>
+          <div class="group-detail-row">
+            <span class="group-detail-label">Hal etilgan (Resolved):</span>
+            <span class="group-detail-value">${countResolved}</span>
+          </div><hr>
+          <div class="group-detail-row">
+            <span class="group-detail-label">Yuqori ball (Score ≥ 5):</span>
+            <span class="group-detail-value">${countHighScore}</span>
+          </div><hr>
+          <div class="group-detail-row">
+            <span class="group-detail-label">Past ball (Score < 5):</span>
+            <span class="group-detail-value">${countLowScore}</span>
+          </div>
+        `
+
+    return `
+      <div class="group-card">
+        <div class="group-card-header">
+          <h4 class="group-card-title">${group.group_name}(${group.group_id})</h4>
         </div>
-        <div class="group-detail-row">
-          <span class="group-detail-label">Status:</span>
-          <span class="group-detail-value">${group.status}</span>
+        
+        <div class="group-card-details">
+          
+          ${!isChecked ? `
+        <div style="margin-top: 1rem;">
+          <p style='margin-bottom:5px'>Bu guruh uchun hali tekshirishlar mavjud emas.</p>
+          <a style='display:inline-block;text-decoration:none' class='btn-primary' href="/group-check?group_id=${group.group_id}" class="btn-check">Tekshirish</a>
+        </div>
+      ` : detailsHTML}
         </div>
       </div>
-    </div>
-  `).join('');
+    `;
+  }).join('');
+
 
   return `
     <div class="groups-detail-section">
       <h3 class="section-title">👥 Biriktirilgan Guruhlar (${groups.length})</h3>
+      
+      <!-- Overall Stats Summary Card -->
+      <div class="overall-stats-card" style="margin-bottom: 1.5rem; padding: 1rem; background: var(--bg-surface, #f8f9fa); border-radius: 8px;">
+        <h4>📊 Umumiy Guruhlar Statistikasi</h4>
+        <div style="display: flex; gap: 1.5rem; flex-wrap: wrap; margin-top: 0.5rem;">
+          <div><strong>Jami talabalar:</strong> ${totalStudents}</div>
+          <div><strong>Jami tekshirilgan:</strong> ${totalChecked}</div>
+          <div><strong>Hal etilgan:</strong> ${totalResolved}</div>
+          <div><strong>Yuqori ball (≥ 5):</strong> ${totalHighScore}</div>
+        </div>
+      </div>
+
       <div class="groups-grid">
         ${groupCardsHTML}
       </div>
@@ -204,14 +276,58 @@ function getReportCardHTML(report) {
 }
 
 // Render reports section
-function getReportsHTML(reports) {
+function getReportsHTML(reports, groups = []) {
+  const rawReports = reports || [];
+
+  // Har bir talaba bo'yicha eng oxirgi reportni ajratib olish
+  const latestReportsMap = new Map();
+
+  rawReports.forEach(report => {
+    const existing = latestReportsMap.get(report.student_id);
+    
+    if (!existing) {
+      latestReportsMap.set(report.student_id, report);
+    } else {
+      // created_at sanasini solishtirib eng oxirgisini saqlaymiz
+      const existingDate = new Date(existing.created_at);
+      const currentDate = new Date(report.created_at);
+      
+      if (currentDate > existingDate) {
+        latestReportsMap.set(report.student_id, report);
+      }
+    }
+  });
+
+  // Map'dan massiv hosil qilamiz va ALL_REPORTS'ga beramiz
+  ALL_REPORTS = Array.from(latestReportsMap.values());
+
+  // Select option larini shakllantirish
+  const groupOptionsHTML = groups.map(g => `
+    <option value="${g.group_id}">${g.group_name}</option>
+  `).join('');
+
+  return `
+    <div class="reports-section">
+      <div class="reports-header-actions" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <h3 class="section-title" style="margin: 0;">📋 Oxirgi AI Hisobotlar</h3>
+        
+        <select id="group-report-filter" style="padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border-color, #ccc);">
+          <option value="">Barcha guruhlar</option>
+          ${groupOptionsHTML}
+        </select>
+      </div>
+
+      <div id="reports-container-wrapper">
+        ${getReportsListHTML(ALL_REPORTS)}
+      </div>
+    </div>
+  `;
+}
+function getReportsListHTML(reports) {
   if (!reports || reports.length === 0) {
     return `
-      <div class="reports-section">
-        <h3 class="section-title">📋 Oxirgi AI Hisobotlar</h3>
-        <div class="reports-empty">
-          <p>Hech qanday hisobotlar topilmadi</p>
-        </div>
+      <div class="reports-empty">
+        <p>Hech qanday hisobotlar topilmadi</p>
       </div>
     `;
   }
@@ -219,13 +335,10 @@ function getReportsHTML(reports) {
   const reportCardsHTML = reports.slice(0, 10).map(report => getReportCardHTML(report)).join('');
 
   return `
-    <div class="reports-section">
-      <h3 class="section-title">📋 Oxirgi AI Hisobotlar (Jami: ${reports.length})</h3>
-      <div class="reports-container">
-        ${reportCardsHTML}
-      </div>
-      ${reports.length > 10 ? `<p style="text-align: center; color: var(--text-muted); margin-top: 1rem;">va yana ${reports.length - 10} ta...</p>` : ''}
+    <div class="reports-container">
+      ${reportCardsHTML}
     </div>
+    ${reports.length > 10 ? `<p style="text-align: center; color: var(--text-muted); margin-top: 1rem;">va yana ${reports.length - 10} ta...</p>` : ''}
   `;
 }
 
@@ -241,10 +354,14 @@ async function renderPage() {
 
     assistantNameSpan.textContent = assistant.full_name;
 
+    // Fetch stats for all groups belonging to the current assistant
+    const groupIds = (assistant.groups || []).map(g => g.group_id);
+    const statsData = await fetchStudentStats(groupIds);
+
     const html = `
       ${getAssistantInfoHTML(assistant)}
-      ${getGroupsHTML(assistant.groups)}
-      ${getReportsHTML(reports)}
+      ${getGroupsHTML(assistant.groups, statsData)}
+      ${getReportsHTML(reports, assistant.groups)}
     `;
 
     outputDiv.innerHTML = html;
@@ -256,6 +373,24 @@ async function renderPage() {
 
 // Event listeners
 reloadBtn?.addEventListener('click', renderPage);
+
+// Filter o'zgarganda ishlaydigan listener
+outputDiv.addEventListener('change', (e) => {
+  if (e.target && e.target.id === 'group-report-filter') {
+    const selectedGroupId = e.target.value;
+    
+    // Tanlangan guruh bo'yicha filterlash (bo'sh bo'lsa hammasi)
+    const filteredReports = selectedGroupId 
+      ? ALL_REPORTS.filter(r => String(r.group_id) === String(selectedGroupId))
+      : ALL_REPORTS;
+
+    // Faqat reportlar konteynerini yangilash
+    const container = document.getElementById('reports-container-wrapper');
+    if (container) {
+      container.innerHTML = getReportsListHTML(filteredReports);
+    }
+  }
+});
 
 // Initial render
 renderPage();
