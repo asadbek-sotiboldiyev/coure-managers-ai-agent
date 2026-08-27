@@ -133,7 +133,7 @@ function getGroupsHTML(groups, statsData) {
   const totalStudents = students.length;
   const totalChecked = checked.length;
   const totalResolved = checked.filter(s => s.is_resolved === 1).length;
-  const totalHighScore = checked.filter(s => s.score >= 5).length;
+  const totalHighScore = checked.filter(s => s.score >= 7).length;
 
   const groupCardsHTML = groups.map(group => {
     const gStudents = students.filter(s => s.group_id === group.group_id);
@@ -142,8 +142,8 @@ function getGroupsHTML(groups, statsData) {
     const countStudents = gStudents.length;
     const countChecked = gChecked.length;
     const countResolved = gChecked.filter(s => s.is_resolved === 1).length;
-    const countHighScore = gChecked.filter(s => s.score >= 5).length;
-    const countLowScore = gChecked.filter(s => s.score < 5).length;
+    const countHighScore = gChecked.filter(s => s.score >= 7).length;
+    const countLowScore = gChecked.filter(s => s.score < 7).length;
 
     const isChecked = gChecked.length > 0;
 
@@ -161,11 +161,11 @@ function getGroupsHTML(groups, statsData) {
             <span class="group-detail-value">${countResolved}</span>
           </div><hr>
           <div class="group-detail-row">
-            <span class="group-detail-label">Yuqori ball (Score ≥ 5):</span>
+            <span class="group-detail-label">Yuqori ball (Score ≥ 7):</span>
             <span class="group-detail-value">${countHighScore}</span>
           </div><hr>
           <div class="group-detail-row">
-            <span class="group-detail-label">Past ball (Score < 5):</span>
+            <span class="group-detail-label">Past ball (Score < 7):</span>
             <span class="group-detail-value">${countLowScore}</span>
           </div>
         `
@@ -201,7 +201,7 @@ function getGroupsHTML(groups, statsData) {
           <div><strong>Jami talabalar:</strong> ${totalStudents}</div>
           <div><strong>Jami tekshirilgan:</strong> ${totalChecked}</div>
           <div><strong>Hal etilgan:</strong> ${totalResolved}</div>
-          <div><strong>Yuqori ball (≥ 5):</strong> ${totalHighScore}</div>
+          <div><strong>Yuqori ball (≥ 7):</strong> ${totalHighScore}</div>
         </div>
       </div>
 
