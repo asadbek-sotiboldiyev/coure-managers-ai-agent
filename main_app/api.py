@@ -872,7 +872,6 @@ async def get_students_stat(group_ids: str):
     WHERE checked_at >= datetime('now', '-7 days') and sil.student_id is not null and gcl.group_id in ({group_ids_str})
     group by sil.student_id 
     """
-    print(f"query_checked_students: {query_checked_students}")
     students_checked = []
     try:
         with get_local_connection() as conn:
